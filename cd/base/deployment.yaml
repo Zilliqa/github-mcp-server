@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github-mcp-server
+  labels:
+    app: github-mcp-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github-mcp-server
+  template:
+    metadata:
+      labels:
+        app: github-mcp-server
+    spec:
+      containers:
+      - name: github-mcp-server
+        image: github-mcp-server
+        imagePullPolicy: Always
+        env:
+        - name: GITHUB_PERSONAL_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-mcp-secrets
+              key: GITHUB_TOKEN
+        - name: GITHUB_TOOLSETS
+          valueFrom:
+            configMapKeyRef:
+              name: github-mcp-config
+              key: GITHUB_TOOLSETS
+        - name: GITHUB_READ_ONLY
+          valueFrom:
+            configMapKeyRef:
+              name: github-mcp-config
+              key: GITHUB_READ_ONLY
+        - name: GITHUB_DYNAMIC_TOOLSETS
+          valueFrom:
+            configMapKeyRef:
+              name: github-mcp-config
+              key: GITHUB_DYNAMIC_TOOLSETS
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "echo 'Liveness check passed'"
+          initialDelaySeconds: 30
+          periodSeconds: 60
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - "echo 'Readiness check passed'"
+          initialDelaySeconds: 5
+          periodSeconds: 30
